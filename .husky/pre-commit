@@ -1,1 +1,28 @@
+#!/usr/bin/env sh
+
+echo "🔍 Running pre-commit validations..."
+
+echo ""
+echo "========================================="
+echo "1/2 - TypeScript type checking"
+echo "========================================="
+npx tsc --noEmit
+TSC_EXIT=$?
+
+if [ $TSC_EXIT -ne 0 ]; then
+  echo "❌ TypeScript errors found. Fix before committing."
+  exit 1
+fi
+echo "✅ TypeScript check passed."
+
+echo ""
+echo "========================================="
+echo "2/2 - Lint staged files (lint-staged)"
+echo "========================================="
 npx lint-staged
+LINT_EXIT=$?
+
+echo ""
+echo "========================================="
+echo "✅ Pre-commit checks passed!"
+echo "========================================="

@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "lint": "eslint .",
+    "check:bundle": "expo export --platform all --dev false",
+    "check:expo": "expo-doctor",
     "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
-    "prepare": "husky"
+    "ios": "expo start --ios",
+    "lint:fix": "eslint . --fix",
+    "lint": "eslint .",
+    "precommit": "sh .husky/pre-commit",
+    "prepare": "husky",
+    "start": "expo start",
+    "typecheck": "tsc --noEmit",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

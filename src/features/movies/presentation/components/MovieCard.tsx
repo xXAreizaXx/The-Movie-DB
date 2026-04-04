@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Movie } from '@features/movies/domain/entities';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useWatchlistStore } from '../store';
 
 interface MovieCardProps {
   movie: Movie;
@@ -13,6 +14,8 @@ const ASPECT_RATIO = 2 / 3;
 
 export const MovieCard = ({ movie, onPress }: MovieCardProps) => {
   const { colors } = useTheme();
+  const isInWatchlist = useWatchlistStore((s) => s.movies.some((m) => m.id === movie.id));
+  const toggle = useWatchlistStore((s) => s.toggle);
 
   return (
     <Pressable
@@ -36,6 +39,20 @@ export const MovieCard = ({ movie, onPress }: MovieCardProps) => {
           <Ionicons name="star" size={10} color="#FBBF24" />
           <Text style={styles.ratingText}>{movie.voteAverage.toFixed(1)}</Text>
         </View>
+        <Pressable
+          onPress={(e) => {
+            e.stopPropagation();
+            toggle(movie);
+          }}
+          hitSlop={6}
+          style={styles.bookmarkBadge}
+        >
+          <Ionicons
+            name={isInWatchlist ? 'bookmark' : 'bookmark-outline'}
+            size={16}
+            color={isInWatchlist ? '#FBBF24' : '#fff'}
+          />
+        </Pressable>
       </View>
       <Text
         style={[styles.title, { color: colors.textPrimary }]}
@@ -103,5 +120,17 @@ const styles = StyleSheet.create({
   year: {
     fontSize: 11,
     marginTop: 2,
+  },
+
+  bookmarkBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

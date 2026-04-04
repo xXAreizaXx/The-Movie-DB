@@ -1,5 +1,6 @@
 import { useTheme } from '@core/theme';
 import { Ionicons } from '@expo/vector-icons';
+import type { Movie } from '@features/movies/domain/entities';
 import type { RootStackScreenProps } from '@infrastructure/navigation/types';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,6 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +16,7 @@ import {
 } from 'react-native';
 import { CastCard } from '../components';
 import { useMovieDetail } from '../hooks';
+import { useWatchlistStore } from '../store';
 
 type Props = RootStackScreenProps<'MovieDetail'>;
 
@@ -38,6 +41,8 @@ export const MovieDetailScreen = ({ route }: Props) => {
   const { colors } = useTheme();
   const { movieId } = route.params;
   const { data: movie, isLoading, isError } = useMovieDetail(movieId);
+  const isInWatchlist = useWatchlistStore((s) => s.movies.some((m) => m.id === movieId));
+  const toggleWatchlist = useWatchlistStore((s) => s.toggle);
 
   if (isLoading) {
     return (
@@ -60,124 +65,191 @@ export const MovieDetailScreen = ({ route }: Props) => {
 
   const director = movie.crew.find((c) => c.job === 'Director');
 
-  return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Backdrop */}
-      <View style={styles.backdropContainer}>
-        {movie.backdropUrl ? (
-          <Image
-            source={{ uri: movie.backdropUrl }}
-            style={styles.backdrop}
-            contentFit="cover"
-            transition={400}
-          />
-        ) : (
-          <View style={[styles.backdrop, { backgroundColor: colors.secondary }]} />
-        )}
-        <LinearGradient colors={['transparent', colors.background]} style={styles.gradient} />
-      </View>
+  const movieForWatchlist: Movie = {
+    id: movie.id,
+    title: movie.title,
+    overview: movie.overview,
+    posterUrl: movie.posterUrl,
+    backdropUrl: movie.backdropUrl,
+    releaseDate: movie.releaseDate,
+    voteAverage: movie.voteAverage,
+    voteCount: movie.voteCount,
+    genreIds: movie.genres.map((g) => g.id),
+    popularity: 0,
+    originalLanguage: movie.originalLanguage,
+  };
 
-      {/* Info principal */}
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          {movie.posterUrl && (
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView style={styles.container}>
+        {/* Backdrop */}
+        <View style={styles.backdropContainer}>
+          {movie.backdropUrl ? (
             <Image
-              source={{ uri: movie.posterUrl }}
-              style={[styles.poster, { backgroundColor: colors.surface }]}
+              source={{ uri: movie.backdropUrl }}
+              style={styles.backdrop}
               contentFit="cover"
-              transition={300}
+              transition={400}
             />
+          ) : (
+            <View style={[styles.backdrop, { backgroundColor: colors.secondary }]} />
           )}
-          <View style={styles.headerInfo}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>{movie.title}</Text>
-            {movie.tagline && (
-              <Text style={[styles.tagline, { color: colors.textSecondary }]}>{movie.tagline}</Text>
+          <LinearGradient colors={['transparent', colors.background]} style={styles.gradient} />
+        </View>
+
+        {/* Info principal */}
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            {movie.posterUrl && (
+              <Image
+                source={{ uri: movie.posterUrl }}
+                style={[styles.poster, { backgroundColor: colors.surface }]}
+                contentFit="cover"
+                transition={300}
+              />
             )}
-            <View style={styles.metaRow}>
-              <Ionicons name="star" size={14} color="#FBBF24" />
-              <Text style={styles.rating}>{movie.voteAverage.toFixed(1)}</Text>
-              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                ({movie.voteCount.toLocaleString()})
-              </Text>
-            </View>
-            <View style={styles.metaRow}>
-              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
-              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                {formatRuntime(movie.runtime)}
-              </Text>
-              <Text style={[styles.metaDot, { color: colors.textSecondary }]}>·</Text>
-              <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                {movie.releaseDate ? movie.releaseDate.substring(0, 4) : '—'}
-              </Text>
-            </View>
-            {director && (
+            <View style={styles.headerInfo}>
+              <Text style={[styles.title, { color: colors.textPrimary }]}>{movie.title}</Text>
+              {movie.tagline && (
+                <Text style={[styles.tagline, { color: colors.textSecondary }]}>
+                  {movie.tagline}
+                </Text>
+              )}
               <View style={styles.metaRow}>
-                <Ionicons name="videocam-outline" size={14} color={colors.textSecondary} />
+                <Ionicons name="star" size={14} color="#FBBF24" />
+                <Text style={styles.rating}>{movie.voteAverage.toFixed(1)}</Text>
                 <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                  {director.name}
+                  ({movie.voteCount.toLocaleString()})
                 </Text>
               </View>
-            )}
-          </View>
-        </View>
-
-        {/* Genres */}
-        {movie.genres.length > 0 && (
-          <View style={styles.genresRow}>
-            {movie.genres.map((g) => (
-              <View key={g.id} style={[styles.genreBadge, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.genreText, { color: colors.textPrimary }]}>{g.name}</Text>
+              <View style={styles.metaRow}>
+                <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                  {formatRuntime(movie.runtime)}
+                </Text>
+                <Text style={[styles.metaDot, { color: colors.textSecondary }]}>·</Text>
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                  {movie.releaseDate ? movie.releaseDate.substring(0, 4) : '—'}
+                </Text>
               </View>
-            ))}
+              {director && (
+                <View style={styles.metaRow}>
+                  <Ionicons name="videocam-outline" size={14} color={colors.textSecondary} />
+                  <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+                    {director.name}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
 
-        {/* Sinopsis */}
-        {movie.overview ? (
+          {/* Genres */}
+          {movie.genres.length > 0 && (
+            <View style={styles.genresRow}>
+              {movie.genres.map((g) => (
+                <View key={g.id} style={[styles.genreBadge, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.genreText, { color: colors.textPrimary }]}>{g.name}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Watchlist button */}
+          <Pressable
+            onPress={() => toggleWatchlist(movieForWatchlist)}
+            style={[
+              styles.watchlistBtn,
+              { backgroundColor: isInWatchlist ? colors.accent : colors.surface },
+            ]}
+          >
+            <View style={styles.watchlistBtnRow}>
+              <Ionicons
+                name={isInWatchlist ? 'bookmark' : 'bookmark-outline'}
+                size={20}
+                color={isInWatchlist ? '#fff' : colors.textPrimary}
+              />
+              <Text
+                style={[
+                  styles.watchlistBtnText,
+                  { color: isInWatchlist ? '#fff' : colors.textPrimary },
+                ]}
+              >
+                {isInWatchlist ? 'En Mi Lista' : 'Agregar a Mi Lista'}
+              </Text>
+            </View>
+          </Pressable>
+
+          {/* Sinopsis */}
+          {movie.overview ? (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Sinopsis</Text>
+              <Text style={[styles.overview, { color: colors.textSecondary }]}>
+                {movie.overview}
+              </Text>
+            </View>
+          ) : null}
+
+          {/* Reparto */}
+          {movie.cast.length > 0 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Reparto</Text>
+              <FlatList
+                data={movie.cast.slice(0, 20)}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => <CastCard member={item} />}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.castList}
+                ItemSeparatorComponent={CastSeparator}
+              />
+            </View>
+          )}
+
+          {/* Info adicional */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Sinopsis</Text>
-            <Text style={[styles.overview, { color: colors.textSecondary }]}>{movie.overview}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Info</Text>
+            <View style={styles.infoGrid}>
+              <InfoItem label="Estado" value={movie.status} colors={colors} />
+              <InfoItem
+                label="Idioma"
+                value={movie.originalLanguage.toUpperCase()}
+                colors={colors}
+              />
+              <InfoItem label="Presupuesto" value={formatMoney(movie.budget)} colors={colors} />
+              <InfoItem label="Recaudado" value={formatMoney(movie.revenue)} colors={colors} />
+            </View>
           </View>
-        ) : null}
 
-        {/* Reparto */}
-        {movie.cast.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Reparto</Text>
-            <FlatList
-              data={movie.cast.slice(0, 20)}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => <CastCard member={item} />}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.castList}
-              ItemSeparatorComponent={CastSeparator}
-            />
-          </View>
-        )}
-
-        {/* Info adicional */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Info</Text>
-          <View style={styles.infoGrid}>
-            <InfoItem label="Estado" value={movie.status} colors={colors} />
-            <InfoItem label="Idioma" value={movie.originalLanguage.toUpperCase()} colors={colors} />
-            <InfoItem label="Presupuesto" value={formatMoney(movie.budget)} colors={colors} />
-            <InfoItem label="Recaudado" value={formatMoney(movie.revenue)} colors={colors} />
-          </View>
+          {/* Productoras */}
+          {movie.productionCompanies.length > 0 && (
+            <View style={[styles.section, { paddingBottom: 40 }]}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Productoras</Text>
+              <Text style={[styles.companies, { color: colors.textSecondary }]}>
+                {movie.productionCompanies.map((c) => c.name).join(', ')}
+              </Text>
+            </View>
+          )}
         </View>
+      </ScrollView>
 
-        {/* Productoras */}
-        {movie.productionCompanies.length > 0 && (
-          <View style={[styles.section, { paddingBottom: 40 }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Productoras</Text>
-            <Text style={[styles.companies, { color: colors.textSecondary }]}>
-              {movie.productionCompanies.map((c) => c.name).join(', ')}
-            </Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      {/* FAB Watchlist */}
+      <Pressable
+        onPress={() => toggleWatchlist(movieForWatchlist)}
+        style={({ pressed }) => [
+          styles.fab,
+          {
+            backgroundColor: isInWatchlist ? colors.accent : colors.surface,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+      >
+        <Ionicons
+          name={isInWatchlist ? 'bookmark' : 'bookmark-outline'}
+          size={22}
+          color={isInWatchlist ? '#fff' : colors.textPrimary}
+        />
+      </Pressable>
+    </View>
   );
 };
 
@@ -345,5 +417,41 @@ const styles = StyleSheet.create({
   companies: {
     fontSize: 13,
     lineHeight: 20,
+  },
+
+  watchlistBtn: {
+    height: 48,
+    borderRadius: 12,
+    marginTop: 18,
+    marginBottom: 8,
+  },
+
+  watchlistBtnRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+
+  watchlistBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  fab: {
+    position: 'absolute',
+    bottom: 28,
+    right: 20,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
   },
 });

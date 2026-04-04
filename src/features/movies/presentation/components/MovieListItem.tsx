@@ -7,9 +7,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 interface MovieListItemProps {
   movie: Movie;
   onPress: (movie: Movie) => void;
+  compact?: boolean;
 }
 
-export const MovieListItem = ({ movie, onPress }: MovieListItemProps) => {
+export const MovieListItem = ({ movie, onPress, compact }: MovieListItemProps) => {
   const { colors } = useTheme();
 
   return (
@@ -17,6 +18,7 @@ export const MovieListItem = ({ movie, onPress }: MovieListItemProps) => {
       onPress={() => onPress(movie)}
       style={({ pressed }) => [
         styles.card,
+        compact && styles.cardCompact,
         {
           backgroundColor: colors.surface,
           opacity: pressed ? 0.85 : 1,
@@ -97,6 +99,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 14,
     overflow: 'hidden',
+  },
+
+  cardCompact: {
+    marginHorizontal: 0,
+    borderRadius: 0,
   },
 
   backdropWrap: {
