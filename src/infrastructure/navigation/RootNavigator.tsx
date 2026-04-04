@@ -30,7 +30,7 @@ export const RootNavigator = () => {
         component={MovieDetailScreen}
         options={({ route }) => ({
           title: route.params.title,
-          headerBackTitle: 'Volver',
+          headerBackButtonDisplayMode: 'minimal',
         })}
       />
     </Stack.Navigator>
