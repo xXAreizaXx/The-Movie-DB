@@ -39,7 +39,11 @@ export const MovieHorizontalList = ({
       <FlatList
         data={movies}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <MovieCard movie={item} onPress={onMoviePress} />}
+        renderItem={({ item }) => (
+          <View style={styles.cardWrapper}>
+            <MovieCard movie={item} onPress={onMoviePress} />
+          </View>
+        )}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
@@ -75,6 +79,9 @@ const styles = StyleSheet.create({
     height: 210,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  cardWrapper: {
+    width: 140,
   },
   footerLoader: {
     width: 40,

@@ -9,8 +9,7 @@ interface MovieCardProps {
   onPress: (movie: Movie) => void;
 }
 
-const CARD_WIDTH = 140;
-const CARD_HEIGHT = 210;
+const ASPECT_RATIO = 2 / 3;
 
 export const MovieCard = ({ movie, onPress }: MovieCardProps) => {
   const { colors } = useTheme();
@@ -54,13 +53,12 @@ export const MovieCard = ({ movie, onPress }: MovieCardProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH,
-    marginRight: 12,
+    width: '100%',
   },
 
   posterContainer: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    width: '100%',
+    aspectRatio: ASPECT_RATIO,
     borderRadius: 12,
     marginBottom: 8,
     overflow: 'hidden',
@@ -100,9 +98,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: '600',
-    width: '100%',
-    maxWidth: CARD_WIDTH,
-    flexShrink: 1,
   },
 
   year: {
