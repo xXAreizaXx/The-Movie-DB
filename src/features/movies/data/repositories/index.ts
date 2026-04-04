@@ -1,0 +1,1 @@
+export { createMovieRepository } from './movieRepositoryImpl';
