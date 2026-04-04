@@ -42,10 +42,15 @@ export const SearchScreen = ({ navigation }: Props) => {
 
   const movies = useMemo(() => data?.pages.flatMap((p) => p.results) ?? [], [data]);
 
-  const trendingMovies = useMemo(
-    () => trending.data?.pages.flatMap((p) => p.results) ?? [],
-    [trending.data],
-  );
+  const trendingMovies = useMemo(() => {
+    const all = trending.data?.pages.flatMap((p) => p.results) ?? [];
+    const seen = new Set<number>();
+    return all.filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [trending.data]);
 
   const totalResults = data?.pages[0]?.totalResults ?? 0;
 

@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setupOnlineManager } from '@shared/hooks/useOnlineStatus';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ReactNode } from 'react';
+
+setupOnlineManager();
 
 const queryClient = new QueryClient({
   defaultOptions: {

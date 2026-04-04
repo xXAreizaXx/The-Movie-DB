@@ -193,4 +193,17 @@ const styles = StyleSheet.create({
   chevron: {
     marginLeft: 6,
   },
+
+  bookmarkBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
 });
