@@ -1,0 +1,41 @@
+# DEPENDENCIES
+./package-lock.json
+**/package-lock.json
+node_modules/
+package-lock.json
+
+
+# EXPO
+.expo/
+dist/
+expo-env.d.ts
+web-build/
+
+# Native
+*.jks
+*.key
+*.mobileprovision
+*.orig.*
+*.p12
+*.p8
+
+# METRO
+.metro-health-check*
+
+# DEBUG
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# MAC_OS
+.DS_Store
+*.pem
+
+# ENV
+.env*
+
+# TYPESCRIPT
+*.tsbuildinfo
+
+# APP
+app-example
