@@ -1,5 +1,6 @@
 import type { Movie } from '@features/movies/domain/entities';
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 const REMINDER_DELAY_SECONDS = 180; // 3 minutes
 
@@ -8,6 +9,9 @@ const scheduledMap = new Map<number, string>();
 
 // Track movies the user has already opened (cancels pending reminder)
 const viewedMovieIds = new Set<number>();
+
+// Cache permission status to avoid repeated checks
+let permissionGranted: boolean | null = null;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -18,6 +22,30 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+async function ensurePermissions(): Promise<boolean> {
+  if (permissionGranted === true) return true;
+
+  const { status: existing } = await Notifications.getPermissionsAsync();
+  if (existing === 'granted') {
+    permissionGranted = true;
+    return true;
+  }
+
+  const { status } = await Notifications.requestPermissionsAsync();
+  permissionGranted = status === 'granted';
+
+  // Android 13+ needs a notification channel
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('watchlist', {
+      name: 'Watchlist Reminders',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: null,
+    });
+  }
+
+  return permissionGranted;
+}
 
 export const watchlistReminder = {
   /**
@@ -31,6 +59,10 @@ export const watchlistReminder = {
     // Don't schedule if user already viewed this movie
     if (viewedMovieIds.has(movie.id)) return;
 
+    // Ensure we have notification permissions
+    const allowed = await ensurePermissions();
+    if (!allowed) return;
+
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
         title: '🎬 Watchlist',
@@ -40,6 +72,7 @@ export const watchlistReminder = {
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: REMINDER_DELAY_SECONDS,
+        channelId: Platform.OS === 'android' ? 'watchlist' : undefined,
       },
     });
 

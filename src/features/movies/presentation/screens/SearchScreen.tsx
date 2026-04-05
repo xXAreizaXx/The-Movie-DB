@@ -199,30 +199,22 @@ export const SearchScreen = ({ navigation }: Props) => {
           data={filteredMovies}
           keyExtractor={(item) => `filter-${item.id}`}
           renderItem={({ item }) => (
-            <Pressable
-              onPress={() => handleMoviePress(item)}
-              style={({ pressed }) => [
-                styles.filterCard,
-                { backgroundColor: colors.surface, opacity: pressed ? 0.85 : 1 },
-              ]}
-            >
-              <Text style={[styles.filterTitle, { color: colors.textPrimary }]} numberOfLines={1}>
-                {item.title}
-              </Text>
-              <View style={styles.filterMeta}>
-                <Ionicons name="pricetags-outline" size={12} color={colors.textSecondary} />
-                <Text style={[styles.filterMetaText, { color: colors.textSecondary }]}>
-                  {item.genres.map((g) => g.name).join(', ')}
-                </Text>
-              </View>
-              <View style={styles.filterMeta}>
-                <Ionicons name="people-outline" size={12} color={colors.textSecondary} />
-                <Text style={[styles.filterMetaText, { color: colors.textSecondary }]}>
-                  {item.cast.filter((c) => c.gender === 1).length}F ·{' '}
-                  {item.cast.filter((c) => c.gender === 2).length}M
-                </Text>
-              </View>
-            </Pressable>
+            <MovieListItem
+              movie={{
+                id: item.id,
+                title: item.title,
+                overview: item.overview,
+                posterUrl: item.posterUrl,
+                backdropUrl: item.backdropUrl,
+                releaseDate: item.releaseDate,
+                voteAverage: item.voteAverage,
+                voteCount: item.voteCount,
+                genreIds: item.genres.map((g) => g.id),
+                popularity: 0,
+                originalLanguage: item.originalLanguage,
+              }}
+              onPress={handleMoviePress}
+            />
           )}
           ItemSeparatorComponent={CardSpacer}
           showsVerticalScrollIndicator={false}
@@ -423,28 +415,5 @@ const styles = StyleSheet.create({
   modePillText: {
     fontSize: 13,
     fontWeight: '600',
-  },
-
-  filterCard: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    padding: 16,
-    gap: 6,
-  },
-
-  filterTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  filterMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-
-  filterMetaText: {
-    fontSize: 12,
-    flex: 1,
   },
 });

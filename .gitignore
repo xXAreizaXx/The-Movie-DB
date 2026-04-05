@@ -33,6 +33,7 @@ yarn-error.*
 
 # ENV
 .env*
+!.env.example
 
 # TYPESCRIPT
 *.tsbuildinfo
