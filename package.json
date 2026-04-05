@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "android": "expo start --android",
+    "android": "expo run:android",
     "check:bundle": "expo export --platform all --dev false",
     "check:expo": "expo-doctor",
     "format": "prettier --write \"src/**/*.{ts,tsx,json}\"",
-    "ios": "expo start --ios",
+    "ios": "expo run:ios",
     "lint:fix": "eslint . --fix",
     "lint": "eslint .",
     "precommit": "sh .husky/pre-commit",
