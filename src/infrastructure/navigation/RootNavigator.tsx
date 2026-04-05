@@ -1,6 +1,7 @@
 import { useTheme } from '@core/theme';
 import { MovieDetailScreen } from '@features/movies/presentation/screens';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNotificationNavigation } from '@shared/hooks/useNotificationNavigation';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
 
@@ -8,6 +9,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator = () => {
   const { colors } = useTheme();
+  useNotificationNavigation();
 
   return (
     <Stack.Navigator

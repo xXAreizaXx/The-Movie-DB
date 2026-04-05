@@ -38,7 +38,7 @@ export const MovieHorizontalList = ({
       <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
       <FlatList
         data={movies}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         renderItem={({ item }) => (
           <View style={styles.cardWrapper}>
             <MovieCard movie={item} onPress={onMoviePress} />

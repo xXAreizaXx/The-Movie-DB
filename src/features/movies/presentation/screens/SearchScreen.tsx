@@ -1,6 +1,6 @@
 import { useTheme } from '@core/theme';
 import { Ionicons } from '@expo/vector-icons';
-import type { Movie } from '@features/movies/domain/entities';
+import type { Movie, MovieDetail } from '@features/movies/domain/entities';
 import type { MainTabScreenProps } from '@infrastructure/navigation/types';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { useCallback, useMemo, useState } from 'react';
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -15,7 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MovieCard, MovieListItem } from '../components';
-import { useSearchMovies, useTrendingMovies } from '../hooks';
+import { useFilterMoviesByLetter, useSearchMovies, useTrendingMovies } from '../hooks';
 
 type Props = MainTabScreenProps<'Search'>;
 
@@ -35,10 +36,17 @@ export const SearchScreen = ({ navigation }: Props) => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, DEBOUNCE_MS);
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-    useSearchMovies(debouncedQuery);
+  const [filterMode, setFilterMode] = useState(false);
+
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } = useSearchMovies(
+    filterMode ? '' : debouncedQuery,
+  );
 
   const trending = useTrendingMovies();
+
+  const filterLetter = filterMode ? debouncedQuery.trim().charAt(0) : '';
+  const { data: filteredMovies, isLoading: isFilterLoading } =
+    useFilterMoviesByLetter(filterLetter);
 
   const movies = useMemo(() => data?.pages.flatMap((p) => p.results) ?? [], [data]);
 
@@ -55,7 +63,7 @@ export const SearchScreen = ({ navigation }: Props) => {
   const totalResults = data?.pages[0]?.totalResults ?? 0;
 
   const handleMoviePress = useCallback(
-    (movie: Movie) => {
+    (movie: Movie | MovieDetail) => {
       navigation.navigate('MovieDetail', { movieId: movie.id, title: movie.title });
     },
     [navigation],
@@ -65,10 +73,11 @@ export const SearchScreen = ({ navigation }: Props) => {
     if (hasNextPage) fetchNextPage();
   }, [hasNextPage, fetchNextPage]);
 
-  const isSearching = debouncedQuery.trim().length > 0;
+  const isSearching = debouncedQuery.trim().length > 0 && !filterMode;
+  const isFiltering = filterMode && debouncedQuery.trim().length > 0;
   const showEmpty = isSearching && !isLoading && movies.length === 0;
   const showResults = isSearching && movies.length > 0;
-  const showDiscovery = !isSearching;
+  const showDiscovery = !isSearching && !isFiltering;
 
   return (
     <View
@@ -85,13 +94,14 @@ export const SearchScreen = ({ navigation }: Props) => {
           <Ionicons name="search" size={18} color={colors.textSecondary} />
           <TextInput
             style={[styles.input, { color: colors.textPrimary }]}
-            placeholder="Buscar peliculas..."
+            placeholder={filterMode ? 'Escribe una letra...' : 'Buscar peliculas...'}
             placeholderTextColor={colors.textSecondary}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"
+            maxLength={filterMode ? 1 : undefined}
           />
           {query.length > 0 && (
             <Ionicons
@@ -101,6 +111,48 @@ export const SearchScreen = ({ navigation }: Props) => {
               onPress={() => setQuery('')}
             />
           )}
+        </View>
+        <View style={styles.modeRow}>
+          <Pressable
+            onPress={() => {
+              setFilterMode(false);
+              setQuery('');
+            }}
+            style={[
+              styles.modePill,
+              {
+                backgroundColor: !filterMode ? colors.accent : colors.surface,
+                borderColor: !filterMode ? colors.accent : colors.border,
+              },
+            ]}
+          >
+            <Ionicons name="search" size={14} color={!filterMode ? '#fff' : colors.textSecondary} />
+            <Text
+              style={[styles.modePillText, { color: !filterMode ? '#fff' : colors.textSecondary }]}
+            >
+              Buscar
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setFilterMode(true);
+              setQuery('');
+            }}
+            style={[
+              styles.modePill,
+              {
+                backgroundColor: filterMode ? colors.accent : colors.surface,
+                borderColor: filterMode ? colors.accent : colors.border,
+              },
+            ]}
+          >
+            <Ionicons name="funnel" size={14} color={filterMode ? '#fff' : colors.textSecondary} />
+            <Text
+              style={[styles.modePillText, { color: filterMode ? '#fff' : colors.textSecondary }]}
+            >
+              Filtro por letra
+            </Text>
+          </Pressable>
         </View>
       </View>
 
@@ -131,6 +183,75 @@ export const SearchScreen = ({ navigation }: Props) => {
           }
         />
       )}
+
+      {/* Balanced filter results */}
+      {isFiltering && isFilterLoading && (
+        <View style={styles.loaderCenter}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Analizando reparto y géneros...
+          </Text>
+        </View>
+      )}
+
+      {isFiltering && !isFilterLoading && filteredMovies && filteredMovies.length > 0 && (
+        <FlatList
+          data={filteredMovies}
+          keyExtractor={(item) => `filter-${item.id}`}
+          renderItem={({ item }) => (
+            <Pressable
+              onPress={() => handleMoviePress(item)}
+              style={({ pressed }) => [
+                styles.filterCard,
+                { backgroundColor: colors.surface, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
+              <Text style={[styles.filterTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                {item.title}
+              </Text>
+              <View style={styles.filterMeta}>
+                <Ionicons name="pricetags-outline" size={12} color={colors.textSecondary} />
+                <Text style={[styles.filterMetaText, { color: colors.textSecondary }]}>
+                  {item.genres.map((g) => g.name).join(', ')}
+                </Text>
+              </View>
+              <View style={styles.filterMeta}>
+                <Ionicons name="people-outline" size={12} color={colors.textSecondary} />
+                <Text style={[styles.filterMetaText, { color: colors.textSecondary }]}>
+                  {item.cast.filter((c) => c.gender === 1).length}F ·{' '}
+                  {item.cast.filter((c) => c.gender === 2).length}M
+                </Text>
+              </View>
+            </Pressable>
+          )}
+          ItemSeparatorComponent={CardSpacer}
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={[styles.resultsContent, { paddingBottom: insets.bottom + 16 }]}
+          ListHeaderComponent={
+            <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
+              {filteredMovies.length} pelicula{filteredMovies.length === 1 ? '' : 's'} con reparto
+              balanceado para &quot;{filterLetter.toUpperCase()}&quot;
+            </Text>
+          }
+        />
+      )}
+
+      {isFiltering &&
+        !isFilterLoading &&
+        (!filteredMovies || filteredMovies.length === 0) &&
+        debouncedQuery.trim().length > 0 && (
+          <View style={styles.emptyState}>
+            <View style={[styles.emptyIconWrap, { backgroundColor: colors.surface }]}>
+              <Ionicons name="funnel-outline" size={40} color={colors.textSecondary} />
+            </View>
+            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>Sin resultados</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              No hay peliculas con &quot;{debouncedQuery.toUpperCase()}&quot; que tengan ≥3 géneros
+              y reparto balanceado (≥3F, ≥3M)
+            </Text>
+          </View>
+        )}
 
       {/* Loading search */}
       {isSearching && isLoading && (
@@ -281,5 +402,49 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+
+  modeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+
+  modePillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  filterCard: {
+    marginHorizontal: 16,
+    borderRadius: 14,
+    padding: 16,
+    gap: 6,
+  },
+
+  filterTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  filterMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+
+  filterMetaText: {
+    fontSize: 12,
+    flex: 1,
   },
 });

@@ -2,6 +2,7 @@ import { movieRemoteDatasource } from '@features/movies/data/datasources';
 import { createMovieRepository } from '@features/movies/data/repositories';
 import type { MovieRepository } from '@features/movies/domain/repositories';
 import {
+  filterMoviesByLetter,
   getMovieDetail,
   getPopularMovies,
   getTopRatedMovies,
@@ -16,3 +17,4 @@ export const getTopRatedMoviesUseCase = getTopRatedMovies(movieRepository);
 export const getTrendingMoviesUseCase = getTrendingMovies(movieRepository);
 export const getMovieDetailUseCase = getMovieDetail(movieRepository);
 export const searchMoviesUseCase = searchMovies(movieRepository);
+export const filterMoviesByLetterUseCase = filterMoviesByLetter(movieRepository);

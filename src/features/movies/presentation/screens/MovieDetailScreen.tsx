@@ -2,8 +2,10 @@ import { useTheme } from '@core/theme';
 import { Ionicons } from '@expo/vector-icons';
 import type { Movie } from '@features/movies/domain/entities';
 import type { RootStackScreenProps } from '@infrastructure/navigation/types';
+import { watchlistReminder } from '@shared/services/watchlistReminder';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -43,6 +45,10 @@ export const MovieDetailScreen = ({ route }: Props) => {
   const { data: movie, isLoading, isError } = useMovieDetail(movieId);
   const isInWatchlist = useWatchlistStore((s) => s.movies.some((m) => m.id === movieId));
   const toggleWatchlist = useWatchlistStore((s) => s.toggle);
+
+  useEffect(() => {
+    watchlistReminder.markViewed(movieId);
+  }, [movieId]);
 
   if (isLoading) {
     return (

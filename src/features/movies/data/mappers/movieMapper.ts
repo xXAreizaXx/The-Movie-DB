@@ -1,15 +1,15 @@
 import { ENV } from '@core/config/env';
 import type {
-  Movie,
-  MovieDetail,
   CastMember,
   CrewMember,
-  ProductionCompany,
+  Movie,
+  MovieDetail,
   PaginatedResult,
+  ProductionCompany,
 } from '@features/movies/domain/entities';
 import type {
-  MovieListItemDTO,
   MovieDetailDTO,
+  MovieListItemDTO,
   PaginatedResponseDTO,
 } from '../datasources/movieApi.schemas';
 
@@ -76,6 +76,7 @@ export const movieMapper = {
           character: c.character,
           profileUrl: buildImageUrl(c.profile_path, 'w185'),
           order: c.order,
+          gender: c.gender,
         }),
       ),
       crew: (dto.credits?.crew ?? []).map(

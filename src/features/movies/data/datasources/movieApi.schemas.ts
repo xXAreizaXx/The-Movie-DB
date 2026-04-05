@@ -40,6 +40,7 @@ export const CastMemberSchema = z.object({
   character: z.string(),
   profile_path: z.string().nullable(),
   order: z.number(),
+  gender: z.number().optional(),
 });
 
 export const CrewMemberSchema = z.object({

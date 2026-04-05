@@ -16,18 +16,35 @@ export const HomeScreen = ({ navigation }: Props) => {
   const popular = usePopularMovies();
   const topRated = useTopRatedMovies();
 
-  const trendingMovies = useMemo(
-    () => trending.data?.pages.flatMap((p) => p.results) ?? [],
-    [trending.data],
-  );
-  const popularMovies = useMemo(
-    () => popular.data?.pages.flatMap((p) => p.results) ?? [],
-    [popular.data],
-  );
-  const topRatedMovies = useMemo(
-    () => topRated.data?.pages.flatMap((p) => p.results) ?? [],
-    [topRated.data],
-  );
+  const trendingMovies = useMemo(() => {
+    const all = trending.data?.pages.flatMap((p) => p.results) ?? [];
+    const seen = new Set<number>();
+    return all.filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [trending.data]);
+
+  const popularMovies = useMemo(() => {
+    const all = popular.data?.pages.flatMap((p) => p.results) ?? [];
+    const seen = new Set<number>();
+    return all.filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [popular.data]);
+
+  const topRatedMovies = useMemo(() => {
+    const all = topRated.data?.pages.flatMap((p) => p.results) ?? [];
+    const seen = new Set<number>();
+    return all.filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [topRated.data]);
 
   const featuredMovie = trendingMovies[0] ?? null;
 

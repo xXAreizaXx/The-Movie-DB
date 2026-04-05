@@ -44,6 +44,7 @@ export interface CastMember {
   character: string;
   profileUrl: string | null;
   order: number;
+  gender?: number;
 }
 
 export interface CrewMember {
